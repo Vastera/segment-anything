@@ -5,6 +5,7 @@ from PyQt5.QtGui import QImage, QPainter, QPen, QPixmap
 from PyQt5.QtWidgets import QApplication, QFileDialog, QGraphicsScene, QGraphicsView, QLabel, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget
 import numpy as np
 import torch
+from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
 sys.path.append("..")
@@ -81,15 +82,19 @@ class ImageApp(QMainWindow):
         if not self.image.isNull():
             h, w = mask_image.shape[-2:]
             # color = np.concatenate([np.random.random(3), np.array([0.8])], axis=0)
-            color = np.concatenate([np.random.random(3) * 255, np.array([0.6])], axis=0)
+            color = np.concatenate([np.random.random(3) * 255, np.array([0.7])], axis=0)
             mask_image = mask_image.reshape(h, w, 1) * color.reshape(1, 1, -1).astype(np.float32)
             # save mask as separate image
-            mask_bgr = cv2.cvtColor(mask_image, cv2.COLOR_RGBA2BGR)
+            # mask_bgr = cv2.cvtColor(mask_image, cv2.COLOR_RGBA2BGR)
             filename = os.path.splitext(self.image_path)[0] + '_mask.png'
-            cv2.imwrite(filename, mask_bgr)
+            # cv2.imwrite(filename, mask_bgr)
             pixmap = QPixmap.fromImage(self.image)
             painter = QPainter(pixmap)
-            painter.drawImage(0, 0, QImage(mask_image.astype(np.float32).data, w, h, QImage.Format_ARGB32))
+            print("mask_image: ", type(mask_image[0][0][0]), ", [0][0][0]: ", mask_image[0][0][0],  ", shape: ", mask_image.shape)
+            img_pil = Image.fromarray(np.uint8(mask_image[:,:,:-1]))
+            img_pil.save(filename, 'PNG')
+            # painter.drawImage(0, 0, QImage(mask_image.data, w, h, QImage.Format_ARGB32))
+            painter.drawImage(0, 0, img_pil.toqimage())
             painter.end()
             scene = QGraphicsScene(self)
             scene.addPixmap(pixmap)
